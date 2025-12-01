@@ -1,0 +1,412 @@
+<div class="pokemon-detail-container">
+  <!-- Header with App Title -->
+  <header class="header">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" class="pokedex-icon">
+        <rect x="4" y="6" width="16" height="12" rx="2" fill="#dc0a2d" stroke="#a00"/>
+        <rect x="6" y="8" width="12" height="6" fill="#333" rx="1"/>
+        <rect x="7" y="9" width="10" height="4" fill="#0f4" rx="0.5"/>
+        <circle cx="20" cy="7" r="1.5" fill="#44f"/>
+        <circle cx="17" cy="7" r="1" fill="#ff4"/>
+        <rect x="6" y="15" width="2" height="1" fill="#666" rx="0.5"/>
+        <rect x="9" y="15" width="2" height="1" fill="#666" rx="0.5"/>
+        <rect x="12" y="15" width="2" height="1" fill="#666" rx="0.5"/>
+      </svg>
+      <h1>Pokédx</h1>
+    </div>
+  </header>
+
+  <!-- Loading Spinner -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="pokeball-spinner"></div>
+    <p>Loading Pokémon details...</p>
+  </div>
+
+  <!-- Pokemon Detail Content -->
+  <div class="pokemon-detail-content" *ngIf="!loading && pokemon">
+    <!-- Main Pokemon Info -->
+    <div class="main-pokemon-info" [style.background]="'linear-gradient(135deg, ' + getTypeColor(pokemon.types[0].type.name) + ', ' + getTypeColor(pokemon.types.length > 1 ? pokemon.types[1].type.name : pokemon.types[0].type.name) + ')'">
+      <div class="pokemon-header">
+        <h1 class="pokemon-name">{{ capitalizeName(pokemon.name) }}</h1>
+        <!-- Button to go to base Pokemon for variants (using dynamic detection) -->
+        <button 
+          class="base-pokemon-btn-inline" 
+          *ngIf="hasBasePokemon()" 
+          (click)="goToBasePokemon()"
+          [style.background-color]="getPrimaryTypeColor()"
+          style="color: white; font-size: 0.75rem; font-weight: bold; padding: 0.5rem 1rem; border-radius: 25px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); border: none; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+        >
+          <svg viewBox="0 0 24 24" class="back-icon" style="width: 16px; height: 16px; fill: white;">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.42-1.41L7.83 13H20v-2z"/>
+          </svg>
+          Base Form
+        </button>
+        <span class="pokemon-number" *ngIf="pokemon.id <= 10000 && !hasBasePokemon()">#{{ pokemon.id.toString().padStart(4, '0') }}</span>
+      </div>
+
+      <div class="pokemon-main-content">
+        <div class="pokemon-image-section">
+          <img 
+            [src]="pokemon.sprites.other?.['official-artwork']?.front_default || pokemon.sprites.front_default || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png'" 
+            [alt]="pokemon.name"
+            class="main-pokemon-image"
+          >
+          
+          <!-- Pokemon Abilities Section -->
+          <div class="pokemon-abilities-section">
+            <h3>Abilities</h3>
+            <div class="abilities-list">
+              <div 
+                class="ability-item" 
+                *ngFor="let abilityData of pokemon.abilities" 
+                [class.hidden-ability]="abilityData.is_hidden"
+                [style.border-color]="abilityData.is_hidden ? getPrimaryTypeColor() : 'transparent'"
+              >
+                <div class="ability-header">
+                  <span class="ability-name">{{ capitalizeName(abilityData.ability.name) }}</span>
+                  <span 
+                    class="ability-badge" 
+                    *ngIf="abilityData.is_hidden"
+                    [style.background-color]="getPrimaryTypeColor()"
+                  >Hidden</span>
+                </div>
+                <div class="ability-description" *ngIf="abilityDetails[abilityData.ability.name]">
+                  {{ getAbilityDescription(abilityData.ability.name) }}
+                </div>
+                <div class="ability-loading" *ngIf="!abilityDetails[abilityData.ability.name]">
+                  Loading description...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pokemon-info-section">
+          <div class="pokemon-types">
+            <span 
+              class="type-badge" 
+              *ngFor="let type of pokemon.types"
+              [style.background-color]="getTypeColor(type.type.name)"
+            >
+              {{ type.type.name }}
+            </span>
+          </div>
+
+          <div class="pokemon-category" *ngIf="pokemonCategory">
+            <span class="category-label">Category:</span>
+            <span class="category-value">{{ pokemonCategory }}</span>
+          </div>
+
+          <div class="pokemon-stats">
+            <div class="stat-row">
+              <span class="stat-label">Height:</span>
+              <span class="stat-value">{{ pokemon.height / 10 }}m</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Weight:</span>
+              <span class="stat-value">{{ pokemon.weight / 10 }}kg</span>
+            </div>
+          </div>
+
+          <div class="pokemon-base-stats">
+            <h3>Base Stats</h3>
+            <div class="stat-bar" *ngFor="let stat of pokemon.stats">
+              <div class="stat-info">
+                <span class="stat-name">{{ stat.stat.name }}</span>
+                <span class="stat-number">{{ stat.base_stat }}</span>
+              </div>
+              <div class="stat-progress">
+                <div 
+                  class="stat-fill" 
+                  [style.width.%]="(stat.base_stat / 255) * 100"
+                  [style.background-color]="getStatColor(pokemon.types[0].type.name)"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pokemon Descriptions Section -->
+    <div 
+      class="pokemon-descriptions-section" 
+      *ngIf="pokemonDescriptions.length > 0"
+      [style.background]="'linear-gradient(135deg, ' + getTypeColor(pokemon.types[0].type.name) + ', ' + getTypeColor(pokemon.types.length > 1 ? pokemon.types[1].type.name : pokemon.types[0].type.name) + ')'"
+    >
+      <h3 style="color: white; text-align: center; font-size: 1.5rem; font-weight: bold; margin: 0 0 1.5rem 0;">Description</h3>
+      
+      <!-- Latest Description -->
+      <div 
+        class="description-latest" 
+        *ngIf="getLatestDescription()"
+      >
+        <p class="description-text">{{ getLatestDescription() }}</p>
+        <span class="description-source" *ngIf="getLatestDescriptionVersion()">— {{ getLatestDescriptionVersion() | titlecase }}</span>
+      </div>
+      
+      <!-- Toggle Button for All Descriptions -->
+      <button 
+        class="toggle-descriptions-btn" 
+        *ngIf="pokemonDescriptions.length > 1" 
+        (click)="toggleDescriptions()"
+        [style.background-color]="getPrimaryTypeColor()"
+        style="color: white; font-size: 0.75rem; font-weight: bold; padding: 0.25rem 0.75rem; border-radius: 12px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); border: none;"
+      >
+        <span>{{ showAllDescriptions ? 'Hide' : 'Show all' }} descriptions ({{ pokemonDescriptions.length }})</span>
+        <svg class="toggle-icon" [class.rotated]="showAllDescriptions" viewBox="0 0 24 24">
+          <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+        </svg>
+      </button>
+      
+      <!-- All Descriptions (Collapsible) -->
+      <div 
+        class="all-descriptions" 
+        *ngIf="showAllDescriptions && pokemonDescriptions.length > 1"
+      >
+        <ng-container *ngFor="let desc of pokemonDescriptions; let i = index">
+          <div 
+            class="description-item" 
+            *ngIf="i > 0"
+          >
+            <p class="description-text">{{ cleanFlavorText(desc.flavor_text) }}</p>
+            <span class="description-source">— {{ cleanGameName(desc.version.name) | titlecase }}</span>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Evolution Chain -->
+    <div 
+      class="evolution-section" 
+      *ngIf="evolutionLine && evolutionLine.length > 1"
+      [style.background]="'linear-gradient(135deg, ' + getTypeColor(pokemon.types[0].type.name) + ', ' + getTypeColor(pokemon.types.length > 1 ? pokemon.types[1].type.name : pokemon.types[0].type.name) + ')'"
+    >
+      <h3 style="color: white; text-align: center; font-size: 1.5rem; font-weight: bold; margin: 0 0 1.5rem 0;">Evolution Line</h3>
+      
+      <!-- Check if it's a multiple evolution case (like Eevee) -->
+      <div class="evolution-display" *ngIf="hasMultipleEvolutions(); else linearEvolution">
+        <!-- Multiple evolutions layout -->
+        <div class="evolution-tree">
+          <div class="base-pokemon" *ngIf="getBasePokemon()">
+            <div 
+              class="evolution-pokemon"
+              [class.current]="getBasePokemon()!.name.toLowerCase() === pokemon.name.toLowerCase()"
+              [style.border-color]="getBasePokemon()!.name.toLowerCase() === pokemon.name.toLowerCase() ? getDarkerPrimaryTypeColor() : 'transparent'"
+              [style.box-shadow]="getBasePokemon()!.name.toLowerCase() === pokemon.name.toLowerCase() ? '0 0 20px ' + getPrimaryTypeColor() : 'none'"
+              [style.background]="getLighterPrimaryTypeColor()"
+              (click)="navigateToEvolution(getBasePokemon()!.id)"
+            >
+              <img [src]="getBasePokemon()!.imageUrl" [alt]="getBasePokemon()!.name" class="evolution-image">
+              <div 
+                class="evolution-name"
+                style="color: white;"
+                [style.font-weight]="getBasePokemon()!.name.toLowerCase() === pokemon.name.toLowerCase() ? 'bold' : 'normal'"
+              >
+                {{ getBasePokemon()!.name }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="evolution-branches">
+            <div 
+              *ngFor="let evolution of getEvolutions()"
+              class="evolution-branch"
+              [class.current]="evolution.name.toLowerCase() === pokemon.name.toLowerCase()"
+            >
+              <div 
+                class="branch-connector"
+                [style.background-color]="getDarkerPrimaryTypeColor()"
+              ></div>
+              <div 
+                class="evolution-pokemon" 
+                [style.border-color]="evolution.name.toLowerCase() === pokemon.name.toLowerCase() ? getDarkerPrimaryTypeColor() : 'transparent'"
+                [style.box-shadow]="evolution.name.toLowerCase() === pokemon.name.toLowerCase() ? '0 0 20px ' + getPrimaryTypeColor() : 'none'"
+                [style.background]="getLighterPrimaryTypeColor()"
+                (click)="navigateToEvolution(evolution.id)"
+              >
+                <img [src]="evolution.imageUrl" [alt]="evolution.name" class="evolution-image">
+                <div 
+                  class="evolution-name"
+                  style="color: white;"
+                  [style.font-weight]="evolution.name.toLowerCase() === pokemon.name.toLowerCase() ? 'bold' : 'normal'"
+                >
+                  {{ evolution.name }}
+                </div>
+                <div 
+                  class="evolution-method-tag" 
+                  *ngIf="evolution.evolutionMethod"
+                  [style.background]="getPrimaryTypeColor()"
+                >
+                  {{ evolution.evolutionMethod }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Linear evolution template -->
+      <ng-template #linearEvolution>
+        <div class="evolution-chain linear-centered">
+          <div 
+            *ngFor="let evolution of evolutionLine; let i = index"
+            class="evolution-stage"
+            [class.current]="evolution.name.toLowerCase() === pokemon.name.toLowerCase()"
+          >
+            <!-- Pokemon Card -->
+            <div 
+              class="evolution-pokemon" 
+              [style.border-color]="evolution.name.toLowerCase() === pokemon.name.toLowerCase() ? getDarkerPrimaryTypeColor() : 'transparent'"
+              [style.box-shadow]="evolution.name.toLowerCase() === pokemon.name.toLowerCase() ? '0 0 20px ' + getPrimaryTypeColor() : 'none'"
+              [style.background]="getLighterPrimaryTypeColor()"
+              (click)="navigateToEvolution(evolution.id)"
+            >
+              <img [src]="evolution.imageUrl" [alt]="evolution.name" class="evolution-image">
+              <div 
+                class="evolution-name"
+                style="color: white;"
+                [style.font-weight]="evolution.name.toLowerCase() === pokemon.name.toLowerCase() ? 'bold' : 'normal'"
+              >
+                {{ evolution.name }}
+              </div>
+              <div 
+                class="evolution-method-tag" 
+                *ngIf="evolution.evolutionMethod"
+                [style.background]="getPrimaryTypeColor()"
+              >
+                {{ evolution.evolutionMethod }}
+              </div>
+            </div>
+            
+            <!-- Evolution Arrow (between Pokemon) -->
+            <div class="evolution-connector" *ngIf="i < evolutionLine.length - 1">
+              <div 
+                class="evolution-arrow"
+                [style.color]="getDarkerPrimaryTypeColor()"
+                [style.text-shadow]="'0 0 10px ' + getPrimaryTypeColor()"
+              >→</div>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Pokemon Sprites Gallery -->
+    <div 
+      class="sprites-section" 
+      *ngIf="pokemon.sprites"
+      [style.background]="'linear-gradient(135deg, ' + getTypeColor(pokemon.types[0].type.name) + ', ' + getTypeColor(pokemon.types.length > 1 ? pokemon.types[1].type.name : pokemon.types[0].type.name) + ')'"
+    >
+      <h3 style="color: white; text-align: center; font-size: 1.5rem; font-weight: bold; margin: 0 0 1.5rem 0;">Sprite Gallery</h3>
+      <div class="sprites-grid">
+        <div class="sprite-item" *ngIf="pokemon.sprites.front_default">
+          <img [src]="pokemon.sprites.front_default" alt="Front Default">
+          <span>Default</span>
+        </div>
+        <div class="sprite-item" *ngIf="pokemon.sprites.front_shiny">
+          <img [src]="pokemon.sprites.front_shiny" alt="Front Shiny">
+          <span>Shiny</span>
+        </div>
+        <div class="sprite-item" *ngIf="pokemon.sprites.front_female">
+          <img [src]="pokemon.sprites.front_female" alt="Female">
+          <span>Female</span>
+        </div>
+        <div class="sprite-item" *ngIf="pokemon.sprites.front_shiny_female">
+          <img [src]="pokemon.sprites.front_shiny_female" alt="Shiny Female">
+          <span>Shiny Female</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pokemon Variants (Legacy) -->
+    <div 
+      class="variants-section" 
+      *ngIf="pokemon"
+      [style.background]="'linear-gradient(135deg, ' + getTypeColor(pokemon.types[0].type.name) + ', ' + getTypeColor(pokemon.types.length > 1 ? pokemon.types[1].type.name : pokemon.types[0].type.name) + ')'"
+      [style.border-color]="getPrimaryTypeColor()"
+    >
+      <h3 style="color: white; text-align: center; font-size: 1.5rem; font-weight: bold; margin: 0 0 1.5rem 0;">Forms & Variants</h3>
+      <div class="variants-grid">
+        <div 
+          class="variant-card" 
+          *ngFor="let variant of getDisplayVariants()"
+          [class.current-variant]="variant.id === pokemon.id"
+          [style.background]="'linear-gradient(135deg, ' + getTypeColor(variant.types[0].type.name) + ', ' + getTypeColor(variant.types.length > 1 ? variant.types[1].type.name : variant.types[0].type.name) + ')'"
+          [style.border-color]="variant.id === pokemon.id ? getDarkerPrimaryTypeColor() : 'transparent'"
+          [style.box-shadow]="variant.id === pokemon.id ? '0 0 20px ' + getPrimaryTypeColor() : 'none'"
+          [style.--badge-bg]="variant.id === pokemon.id ? getPrimaryTypeColor() : 'transparent'"
+          (click)="navigateToVariant(variant.id)"
+        >
+          <img 
+            [src]="variant.sprites.other?.['official-artwork']?.front_default || variant.sprites.front_default || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png'" 
+            [alt]="variant.name"
+            class="variant-image"
+          >
+          <h4 class="variant-name">{{ capitalizeName(variant.name) }}</h4>
+          <div class="variant-types">
+            <span 
+              class="variant-type-badge" 
+              *ngFor="let type of variant.types"
+              [style.background-color]="getTypeColor(type.type.name)"
+            >
+              {{ type.type.name }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pokemon Home Section (only for base Pokemon with ID < 10000) -->
+    <div 
+      class="pokemon-home-section" 
+      *ngIf="pokemon && pokemon.id < 10000 && pokemonHomeList.length > 0"
+      [style.background]="'linear-gradient(135deg, ' + getTypeColor(pokemon.types[0].type.name) + ', ' + getTypeColor(pokemon.types.length > 1 ? pokemon.types[1].type.name : pokemon.types[0].type.name) + ')'"
+      [style.border-color]="getPrimaryTypeColor()"
+    >
+      <h3 style="color: white; text-align: center; font-size: 1.5rem; font-weight: bold; margin: 0 0 1.5rem 0;">Pokemon Home</h3>
+      <ul class="pokemon-home-list">
+        <li *ngFor="let pokemonForm of pokemonHomeList" class="pokemon-home-item">
+          {{ pokemonForm }}
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="!loading && !pokemon">
+    <h2>Pokémon Not Found</h2>
+    <p>The requested Pokémon could not be found.</p>
+    <button 
+      class="back-btn" 
+      (click)="goBack()"
+      style="background-color: #6366f1; color: white; font-size: 0.75rem; font-weight: bold; padding: 0.25rem 0.75rem; border-radius: 12px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); border: none;"
+    >
+      Return to Home
+    </button>
+  </div>
+
+  <!-- Bottom Navigation (Mobile) -->
+  <nav class="bottom-nav">
+    <a class="nav-item" (click)="router.navigate(['/'])" style="cursor: pointer;">
+      <svg viewBox="0 0 24 24" class="nav-icon">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+      </svg>
+      <span>Home</span>
+    </a>
+    
+    <a class="nav-item" (click)="router.navigate(['/search'])" style="cursor: pointer;">
+      <svg viewBox="0 0 24 24" class="nav-icon">
+        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+      </svg>
+      <span>Search</span>
+    </a>
+    
+    <a href="#" class="nav-item">
+      <svg viewBox="0 0 24 24" class="nav-icon">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+      <span>Favorites</span>
+    </a>
+  </nav>
+</div>
