@@ -12,7 +12,7 @@ export class PokemonService {
 
   constructor(private http: HttpClient) { }
 
-  getPokemonList(limit: number = 20, offset: number = 0): Observable<PokemonCard[]> {
+  getPokemonList(limit = 20, offset = 0): Observable<PokemonCard[]> {
     return this.http.get<PokemonListResponse>(`${this.apiUrl}/pokemon?limit=${limit}&offset=${offset}`)
       .pipe(
         switchMap(response => {
@@ -304,7 +304,7 @@ export class PokemonService {
 
   private parseEvolutionChainForVariant(chain: any, originalPokemon: Pokemon): EvolutionInfo[] {
     const evolutionLine: EvolutionInfo[] = [];
-    let current = chain;
+    const current = chain;
     
     // Determina il tipo di variante dal nome del Pokemon originale
     const variantType = this.getVariantType(originalPokemon.name);
@@ -345,7 +345,7 @@ export class PokemonService {
     if (!variantType) return null;
     
     // Mappature conosciute per le forme regionali
-    const regionalVariants: { [key: string]: { [key: string]: { id: number, name: string } } } = {
+    const regionalVariants: Record<string, Record<string, { id: number, name: string }>> = {
       'alola': {
         'rattata': { id: 10104, name: 'rattata-alola' },
         'raticate': { id: 10105, name: 'raticate-alola' },
@@ -466,7 +466,7 @@ export class PokemonService {
 
     const trigger = evolutionDetail.trigger.name;
     let method = '';
-    let conditions: string[] = [];
+    const conditions: string[] = [];
     
     // Base trigger method
     switch (trigger) {

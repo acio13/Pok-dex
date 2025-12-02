@@ -20,10 +20,10 @@ export class PokemonDetailComponent implements OnInit {
   pokemonSpecies?: any;
   basePokemonName?: string;
   basePokemonId?: number;
-  abilityDetails: { [abilityName: string]: AbilityDetail } = {};
-  pokemonCategory: string = '';
-  pokemonDescriptions: Array<{flavor_text: string, version: {name: string}, language: {name: string}}> = [];
-  showAllDescriptions: boolean = false;
+  abilityDetails: Record<string, AbilityDetail> = {};
+  pokemonCategory = '';
+  pokemonDescriptions: {flavor_text: string, version: {name: string}, language: {name: string}}[] = [];
+  showAllDescriptions = false;
   filteredVariants: Pokemon[] = [];
   allVariantsLegacy: Pokemon[] = [];
   pokemonHomeList: string[] = [];
@@ -325,7 +325,7 @@ export class PokemonDetailComponent implements OnInit {
   }
 
   getTypeColor(type: string): string {
-    const typeColors: { [key: string]: string } = {
+    const typeColors: Record<string, string> = {
       normal: '#A8A878',
       fighting: '#C03028',
       flying: '#A890F0',
@@ -383,7 +383,7 @@ export class PokemonDetailComponent implements OnInit {
 
   getStatColor(type: string): string {
     // Colori più scuri e contrastanti per le statistiche
-    const statColors: { [key: string]: string } = {
+    const statColors: Record<string, string> = {
       normal: '#6B6B43',
       fighting: '#801B1B',
       flying: '#6B5FA0',

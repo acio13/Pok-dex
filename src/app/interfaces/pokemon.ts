@@ -14,25 +14,25 @@ export interface Pokemon {
       };
     };
   };
-  types: Array<{
+  types: {
     type: {
       name: string;
     };
-  }>;
-  stats: Array<{
+  }[];
+  stats: {
     base_stat: number;
     stat: {
       name: string;
     };
-  }>;
-  abilities: Array<{
+  }[];
+  abilities: {
     ability: {
       name: string;
       url: string;
     };
     is_hidden: boolean;
     slot: number;
-  }>;
+  }[];
   species: {
     url: string;
   };
@@ -40,18 +40,18 @@ export interface Pokemon {
 
 export interface AbilityDetail {
   name: string;
-  effect_entries: Array<{
+  effect_entries: {
     effect: string;
     language: {
       name: string;
     };
-  }>;
-  flavor_text_entries: Array<{
+  }[];
+  flavor_text_entries: {
     flavor_text: string;
     language: {
       name: string;
     };
-  }>;
+  }[];
 }
 
 export interface PokemonSpecies {
@@ -59,13 +59,13 @@ export interface PokemonSpecies {
     url: string;
   };
   name: string;
-  genera: Array<{
+  genera: {
     genus: string;
     language: {
       name: string;
     };
-  }>;
-  flavor_text_entries: Array<{
+  }[];
+  flavor_text_entries: {
     flavor_text: string;
     language: {
       name: string;
@@ -73,7 +73,7 @@ export interface PokemonSpecies {
     version: {
       name: string;
     };
-  }>;
+  }[];
 }
 
 export interface EvolutionDetail {
@@ -133,10 +133,10 @@ export interface PokemonListResponse {
   count: number;
   next: string | null;
   previous: string | null;
-  results: Array<{
+  results: {
     name: string;
     url: string;
-  }>;
+  }[];
 }
 
 export interface PokemonCard {

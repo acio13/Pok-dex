@@ -385,10 +385,10 @@
 }
 
 .pokemon-descriptions-section {
-  border-radius: 20px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border-radius: 25px;
+  padding: 2.5rem;
+  margin: 2rem 0;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
   // Background will be set dynamically via [style.background]
 
   h3 {
@@ -500,6 +500,7 @@
 .sprites-section {
   border-radius: 20px;
   padding: 2rem;
+  margin-top: 2rem;
   margin-bottom: 2rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   // Background will be set dynamically
@@ -884,9 +885,36 @@
   }
 
   .sprites-section,
-  .variants-section,
+  .variants-section {
+    padding: 1.5rem !important;
+    margin: 1rem 0 !important;
+  }
+  
   .evolution-section {
-    padding: 1.5rem;
+    padding: 1.5rem !important;
+    margin: 1rem 0 !important;
+  }
+  
+  .pokemon-home-section {
+    padding: 1.5rem !important;
+    margin: 1rem 0 !important;
+  }
+  
+  .pokemon-descriptions-section {
+    padding: 1.5rem !important;
+    margin: 1rem 0 !important;
+
+    h3 {
+      font-size: 1.5rem;
+    }
+
+    .description-latest {
+      padding: 1rem;
+    }
+
+    .all-descriptions {
+      max-height: 300px;
+    }
   }
 }
 
@@ -894,12 +922,13 @@
 .evolution-section {
   border: 2px solid transparent; // Will be overridden by dynamic color
   border-radius: 25px;
-  padding: 2.5rem;
+  padding: 2rem;
   margin: 2rem 0;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 
 
@@ -915,9 +944,11 @@
 
 .evolution-display {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: visible;
   padding: 0.5rem 0;
+  box-sizing: border-box;
 }
 
 .evolution-chain {
@@ -1159,7 +1190,7 @@
   }
 
   .pokemon-abilities-section {
-    margin-top: 1rem;
+    margin: 1rem 0;
     padding: 1rem;
     
     h3 {
@@ -1167,26 +1198,9 @@
     }
   }
 
-  .pokemon-descriptions-section {
-    margin: 1rem;
-    padding: 1.5rem;
-
-    h3 {
-      font-size: 1.3rem;
-    }
-
-    .description-latest {
-      padding: 1rem;
-    }
-
-    .all-descriptions {
-      max-height: 300px;
-    }
-  }
-
   .pokemon-forms-section {
-    margin: 1rem;
     padding: 1.5rem;
+    margin: 1rem 0;
 
     .forms-grid {
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -1215,29 +1229,24 @@
     font-size: 0.85rem;
   }
 
-  .evolution-section {
-    margin: 1rem;
-    padding: 1.5rem;
-    
-    h3 {
-      font-size: 1.5rem;
-      
-      &::after {
-        right: -1.5rem;
-        font-size: 1.2rem;
-      }
-    }
-  }
-
   .evolution-chain {
     flex-direction: column;
     gap: 1rem;
     padding: 1rem 0;
+    overflow-x: visible;
+    width: 100%;
+    box-sizing: border-box;
+    
+    &:not(.linear-centered) .evolution-connector {
+      display: none;
+    }
   }
 
   .evolution-stage {
     flex-direction: column;
     gap: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
     
     &:not(:last-child) {
       .evolution-pokemon::after {
@@ -1253,23 +1262,90 @@
     }
   }
 
-  .evolution-connector {
-    display: none;
+  .evolution-arrow {
+    font-size: 1.5rem;
+    text-indent: -9999px;
+    position: relative;
+    
+    &::before {
+      content: '↓';
+      text-indent: 0;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
   }
 
   .evolution-pokemon {
-    min-width: 120px;
-    padding: 1.2rem;
+    min-width: 110px;
+    max-width: 120px;
+    width: 110px;
+    padding: 1rem;
+    box-sizing: border-box;
   }
 
   .evolution-branches {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 0.8rem;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .evolution-image {
     width: 80px;
     height: 80px;
+  }
+}
+
+// Extra small devices (phones, less than 576px)
+@media (max-width: 575px) {
+  .evolution-section {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .evolution-branches {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+  }
+  
+  .evolution-pokemon {
+    min-width: 100px;
+    max-width: 110px;
+    width: 100px;
+    padding: 0.8rem;
+  }
+  
+  .evolution-image {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .evolution-name {
+    font-size: 0.85rem;
+  }
+  
+  .evolution-method-tag {
+    font-size: 0.6rem;
+    padding: 0.2rem 0.4rem;
+  }
+  
+  .evolution-tree {
+    gap: 1.5rem;
+  }
+  
+  .base-pokemon {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .evolution-branch {
+    max-width: 110px;
   }
 }
 

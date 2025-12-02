@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PokemonService } from '../services/pokemon.service';
+import { SearchStateService } from '../services/search-state.service';
 import { Pokemon } from '../interfaces/pokemon';
 
 @Component({
@@ -12,7 +13,7 @@ import { Pokemon } from '../interfaces/pokemon';
   templateUrl: './search.component.html',
   styleUrls: ['./search.component.scss']
 })
-export class SearchComponent implements OnInit {
+export class SearchComponent implements OnInit, OnDestroy {
   // Search filters
   nameFilter = '';
   numberFilter: string | number = '';
@@ -28,6 +29,9 @@ export class SearchComponent implements OnInit {
   
   // Form visibility control
   isFilterFormOpen = true;
+  
+  // Scroll position tracking
+  private scrollListener?: () => void;
 
   // Available Pokemon types for type filter
   pokemonTypes = [
@@ -51,11 +55,50 @@ export class SearchComponent implements OnInit {
 
   constructor(
     private pokemonService: PokemonService,
+    private searchStateService: SearchStateService,
     public router: Router
   ) {}
 
   ngOnInit() {
-    // Componente ready
+    // Ripristina lo stato della ricerca precedente se esiste
+    const savedState = this.searchStateService.getSearchState();
+    if (savedState) {
+      this.nameFilter = savedState.nameFilter;
+      this.numberFilter = savedState.numberFilter;
+      this.typeFilter = savedState.typeFilter;
+      this.generationFilter = savedState.generationFilter;
+      this.searchResults = savedState.searchResults;
+      this.hasSearched = savedState.hasSearched;
+      this.isFilterFormOpen = savedState.isFilterFormOpen;
+      this.currentPage = savedState.currentPage;
+      
+      // Ripristina la posizione di scroll
+      if (savedState.scrollPosition) {
+        setTimeout(() => {
+          window.scrollTo({ top: savedState.scrollPosition, behavior: 'auto' });
+        }, 100);
+      }
+    }
+    
+    // Aggiungi listener per salvare la posizione di scroll
+    this.scrollListener = () => {
+      if (this.hasSearched) {
+        this.saveScrollPosition();
+      }
+    };
+    window.addEventListener('scroll', this.scrollListener, { passive: true });
+  }
+
+  ngOnDestroy() {
+    // Rimuovi il listener dello scroll
+    if (this.scrollListener) {
+      window.removeEventListener('scroll', this.scrollListener);
+    }
+    
+    // Salva lo stato quando si esce dalla pagina
+    if (this.hasSearched) {
+      this.saveCurrentState();
+    }
   }
 
   get isHomeActive(): boolean {
@@ -184,6 +227,9 @@ export class SearchComponent implements OnInit {
     
     this.searchResults = results.sort((a, b) => a.id - b.id);
     this.isLoading = false;
+    
+    // Salva lo stato della ricerca
+    this.saveCurrentState();
   }
 
   private applyAdditionalFilters(results: Pokemon[]): Pokemon[] {
@@ -218,8 +264,32 @@ export class SearchComponent implements OnInit {
     return filteredResults;
   }
 
+  private saveCurrentState() {
+    const state = {
+      nameFilter: this.nameFilter,
+      numberFilter: this.numberFilter,
+      typeFilter: this.typeFilter,
+      generationFilter: this.generationFilter,
+      searchResults: this.searchResults,
+      hasSearched: this.hasSearched,
+      isFilterFormOpen: this.isFilterFormOpen,
+      currentPage: this.currentPage,
+      scrollPosition: window.pageYOffset || document.documentElement.scrollTop
+    };
+    this.searchStateService.saveSearchState(state);
+  }
+
+  private saveScrollPosition() {
+    const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    this.searchStateService.saveScrollPosition(scrollPosition);
+  }
+
   toggleFilterForm() {
     this.isFilterFormOpen = !this.isFilterFormOpen;
+    // Salva lo stato quando si toglie la visibilità dei filtri
+    if (this.hasSearched) {
+      this.saveCurrentState();
+    }
   }
 
   clearSearch() {
@@ -229,7 +299,9 @@ export class SearchComponent implements OnInit {
     this.generationFilter = '';
     this.searchResults = [];
     this.hasSearched = false;
-    this.isFilterFormOpen = true; // Riapri il form quando si pulisce la ricerca
+    this.isFilterFormOpen = true;
+    // Cancella lo stato salvato
+    this.searchStateService.clearSearchState();
   }
 
   getPaginatedResults() {
@@ -241,12 +313,14 @@ export class SearchComponent implements OnInit {
   nextPage() {
     if (this.currentPage * this.itemsPerPage < this.searchResults.length) {
       this.currentPage++;
+      this.saveCurrentState();
     }
   }
 
   previousPage() {
     if (this.currentPage > 1) {
       this.currentPage--;
+      this.saveCurrentState();
     }
   }
 
@@ -263,6 +337,8 @@ export class SearchComponent implements OnInit {
   }
 
   navigateToPokemon(pokemonId: number) {
+    // Salva la posizione di scroll prima di navigare
+    this.saveScrollPosition();
     this.router.navigate(['/pokemon', pokemonId]);
   }
 
@@ -276,7 +352,7 @@ export class SearchComponent implements OnInit {
   }
 
   getTypeColor(type: string): string {
-    const typeColors: { [key: string]: string } = {
+    const typeColors: Record<string, string> = {
       normal: '#A8A878',
       fighting: '#C03028',
       flying: '#A890F0',
