@@ -118,6 +118,16 @@ export class PokemonService {
   }
 
   private capitalizeName(name: string): string {
+    // Special handling for Nidoran - show gender symbols
+    if (name.toLowerCase().includes('nidoran')) {
+      if (name.toLowerCase().includes('-f')) {
+        return 'Nidoran ♀';
+      }
+      if (name.toLowerCase().includes('-m')) {
+        return 'Nidoran ♂';
+      }
+    }
+
     // Handle Pokemon names with hyphens and filter out gender references
     return name.split('-')
       .filter(part => part !== 'male' && part !== 'female' && part !== 'm' && part !== 'f')
@@ -126,12 +136,11 @@ export class PokemonService {
   }
 
   getPokemonVariants(species: any): Observable<Pokemon[]> {
-    if (!species.varieties || species.varieties.length <= 1) {
+    if (!species.varieties || species.varieties.length === 0) {
       return of([]);
     }
 
     const variantPromises: Observable<Pokemon>[] = species.varieties
-      .filter((variety: any) => variety.pokemon.name !== species.name)
       .map((variety: any) => {
         const pokemonId = variety.pokemon.url.split('/').slice(-2, -1)[0];
         return this.getPokemonDetails(pokemonId);
@@ -146,6 +155,25 @@ export class PokemonService {
 
   getPokemonSpecies(nameOrId: string | number): Observable<PokemonSpecies> {
     return this.http.get<PokemonSpecies>(`${this.apiUrl}/pokemon-species/${nameOrId}`);
+  }
+
+  getPokemonForms(pokemonId: number): Observable<any[]> {
+    return this.http.get(`${this.apiUrl}/pokemon/${pokemonId}`).pipe(
+      map((pokemon: any) => pokemon.forms || []),
+      switchMap((forms: any[]) => {
+        console.log('Pokemon forms found:', forms);
+        if (!forms || forms.length === 0) {
+          return of([]);
+        }
+        
+        // Fetch detailed form data for ALL forms (not just when length > 1)
+        const formRequests = forms.map((form: any) => 
+          this.http.get<any>(form.url)
+        );
+        
+        return forkJoin(formRequests);
+      })
+    );
   }
 
   getEvolutionChain(url: string): Observable<EvolutionChain> {
@@ -296,9 +324,12 @@ export class PokemonService {
             level: level
           });
         }
+
+        // Continua anche per evoluzioni alternative se hanno ulteriori evoluzioni
+        if (evolution.evolves_to.length > 0) {
+          this.processEvolutionStage(evolution.evolves_to, evolutionLine, level + 1);
+        }
       });
-      
-      // Per evoluzioni alternative, non procediamo oltre (ogni ramo è indipendente)
     }
   }
 

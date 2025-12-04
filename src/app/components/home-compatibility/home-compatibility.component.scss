@@ -1,0 +1,100 @@
+.home-compatibility {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+
+  &.compatibility-compatible {
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+  }
+
+  &.compatibility-restricted {
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+  }
+
+  &.compatibility-incompatible {
+    background: rgba(244, 67, 54, 0.1);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+  }
+}
+
+.home-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+
+  .home-logo {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+}
+
+.compatibility-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+
+  .status-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .restrictions {
+    small {
+      font-size: 0.625rem;
+      color: #666;
+      font-style: italic;
+    }
+  }
+}
+
+.simple-indicator {
+  display: flex;
+  align-items: center;
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .home-compatibility {
+    padding: 0.125rem;
+    gap: 0.25rem;
+
+    .home-icon .home-logo {
+      width: 16px;
+      height: 16px;
+    }
+
+    .compatibility-info .status-text {
+      font-size: 0.625rem;
+    }
+  }
+}
+
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+  .compatibility-info .status-text {
+    color: #fff;
+  }
+  
+  .compatibility-info .restrictions small {
+    color: #ccc;
+  }
+}
