@@ -53,6 +53,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           }
           
           // This is the home page - check if we have a saved scroll position
+          // Ripristina la posizione SEMPRE quando si torna alla home, indipendentemente da dove si arriva
           const savedScrollPosition = this.searchStateService.getScrollPosition();
           
           if (savedScrollPosition > 0) {
@@ -74,6 +75,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           }
         } else if (event.url.includes('/pokemon/')) {
           // Going to pokemon detail page, scroll to top
+          window.scrollTo(0, 0);
+        } else if (event.url.includes('/search')) {
+          // Going to search page, scroll to top
           window.scrollTo(0, 0);
         }
         
@@ -260,7 +264,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   navigateToPokemonDetail(pokemonId: number): void {
-    // Navigation only - scroll position already saved in mousedown/touchstart
+    // Save current scroll position before navigating
+    this.saveHomePageState();
     this.router.navigate(['/pokemon', pokemonId]);
   }
 
@@ -286,7 +291,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     // Salva la posizione di scroll SOLO quando siamo nella home page
     if (currentUrl === '/' || currentUrl === '') {
       const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-      this.searchStateService.saveScrollPosition(scrollPosition);
+      
+      // Se l'utente è in cima alla pagina (primi 100px), cancella la posizione salvata
+      if (scrollPosition <= 100) {
+        this.searchStateService.saveScrollPosition(0);
+      } else {
+        this.searchStateService.saveScrollPosition(scrollPosition);
+      }
     }
   }
 
